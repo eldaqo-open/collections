@@ -42,7 +42,7 @@ For mockability, the library defines various interfaces which are implemented by
 The `Hashable` interface represents an object, which can be uniquely identified by a hash. 
 The hash is a string, which is used to compare objects for equality. 
 If you do not want to customise how the hash is created, this package provides a trait 
-(`\Eldaqo\Collections\Object\GeneratesObjectHash`), which implements the `getHash` method using the `spl_object_hash`
+(`\Eldaqo\Collections\Object\GenerateSplObjectHash`), which implements the `getHash` method using the `spl_object_hash`
 function.
 
 ### `\Eldaqo\Collections\Pair<TKey, TValue>`

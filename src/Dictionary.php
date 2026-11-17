@@ -9,7 +9,7 @@ use Eldaqo\Collections\Contracts\IDictionary;
 use Eldaqo\Collections\Contracts\IList;
 use Eldaqo\Collections\Contracts\IPair;
 use Eldaqo\Collections\Contracts\ISet;
-use Eldaqo\Collections\Object\GeneratesObjectHash;
+use Eldaqo\Collections\Object\GenerateSplObjectHash;
 use Eldaqo\Collections\Object\Hashable;
 use Eldaqo\Collections\Traits\CollectionShared;
 use Eldaqo\Collections\Traits\CountsElements;
@@ -31,7 +31,7 @@ use ValueError;
  */
 final class Dictionary implements IDictionary, Hashable
 {
-    use GeneratesObjectHash;
+    use GenerateSplObjectHash;
     use CollectionShared;
     use HashKeys;
     use Enumerator;

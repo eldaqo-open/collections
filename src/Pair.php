@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Eldaqo\Collections;
 
 use Eldaqo\Collections\Contracts\IPair;
-use Eldaqo\Collections\Object\GeneratesObjectHash;
+use Eldaqo\Collections\Object\GenerateSplObjectHash;
 
 /**
  * Represents an immutable key-value pair.
@@ -17,7 +17,7 @@ use Eldaqo\Collections\Object\GeneratesObjectHash;
  */
 final readonly class Pair implements IPair
 {
-    use GeneratesObjectHash;
+    use GenerateSplObjectHash;
 
     /**
      * @param TKey $key

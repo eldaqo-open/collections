@@ -6,7 +6,7 @@ namespace Eldaqo\Collections;
 
 use Eldaqo\Collections\Contracts\IDictionary;
 use Eldaqo\Collections\Contracts\IList;
-use Eldaqo\Collections\Object\GeneratesObjectHash;
+use Eldaqo\Collections\Object\GenerateSplObjectHash;
 use Eldaqo\Collections\Object\Hashable;
 use Eldaqo\Collections\Traits\CollectionShared;
 use Eldaqo\Collections\Traits\CountsElements;
@@ -24,7 +24,7 @@ use OutOfRangeException;
  */
 final class ArrayList implements IList, Hashable
 {
-    use GeneratesObjectHash;
+    use GenerateSplObjectHash;
     use CollectionShared;
     /** @use ListShared<T> */
     use ListShared;

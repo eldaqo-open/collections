@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Tests\Doubles\Object\UsesGeneratesObjectHash;
+use Tests\Doubles\Object\UsesGenerateSplObjectHash;
 
 it('generates SPL object hash', function () {
-    $object = new UsesGeneratesObjectHash();
+    $object = new UsesGenerateSplObjectHash();
     expect($object->getHash())->toBe(spl_object_hash($object));
 });

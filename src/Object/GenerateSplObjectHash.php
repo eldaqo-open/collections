@@ -8,7 +8,7 @@ namespace Eldaqo\Collections\Object;
  * Provides a simple Hashable implementation for objects using the SPL extension.
  * @see Hashable
  */
-trait GeneratesObjectHash
+trait GenerateSplObjectHash
 {
     public function getHash(): string
     {
