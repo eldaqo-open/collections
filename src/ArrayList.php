@@ -114,7 +114,7 @@ final class ArrayList implements IList, Hashable
             throw new OutOfRangeException('The length must be greater than 0.');
         }
 
-        $this->pad($length * -1, $value);
+        $this->pad(-$length, $value);
 
         return $this;
     }
@@ -180,7 +180,6 @@ final class ArrayList implements IList, Hashable
     public function sortBy(callable $selector): ArrayList
     {
         usort($this->values, $selector);
-        $this->values = array_values($this->values);
 
         return $this;
     }

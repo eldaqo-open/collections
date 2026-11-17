@@ -10,6 +10,9 @@ use Eldaqo\Collections\Set;
 use Eldaqo\Collections\SortDirection;
 use function Eldaqo\Collections\setOf;
 
+mutates(\Eldaqo\Collections\Set::class);
+mutates(\Eldaqo\Collections\Traits\HashKeys::class);
+
 it('can handle supported types', function (Set $set, int $key, mixed $expectedValue, ?callable $cleanUp = null) {
     try {
         expect($set[$key])->toBe($expectedValue);
@@ -461,4 +464,29 @@ it('distinguishes floats exactly and treats signed zeros as equal', function () 
 
 it('does not mix up float and string values', function () {
     expect(new Set([1.5, '1.5']))->toHaveCount(2);
+});
+
+it('starts iterating at the first element without rewinding', function () {
+    $set = new Set([1, 2]);
+
+    expect($set->valid())->toBeTrue()
+        ->and($set->current())->toBe(1);
+});
+
+it('throws exception when trying to set the offset right after the last element', function () {
+    (new Set([1, 2, 3]))->offsetSet(3, 4);
+})->throws(OutOfRangeException::class);
+
+it('throws exception when trying to set offset -1', function () {
+    (new Set([1, 2, 3]))->offsetSet(-1, 4);
+})->throws(OutOfRangeException::class);
+
+it('hashes array elements by their keys, values, types and boundaries', function () {
+    $set = new Set([['a' => 1], ['b' => 1], [1 => 'a'], ['ab', 'c'], ['a', 'bc'], [1], ['1']]);
+
+    expect($set)->toHaveCount(7);
+});
+
+it('distinguishes true from false', function () {
+    expect(new Set([true, false]))->toHaveCount(2);
 });

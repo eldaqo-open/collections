@@ -21,3 +21,5 @@ jobs:
 
       - name: Tests
         run: composer run-script test
+      - name: Mutation tests
+        run: composer run-script mutate

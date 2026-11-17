@@ -92,7 +92,7 @@ final class Set implements ISet, Hashable
      */
     public function offsetSet(mixed $offset, mixed $value): void
     {
-        if ($offset < 0 || $offset > $this->count()) {
+        if ($offset < 0 || $offset >= $this->count()) {
             throw new OutOfRangeException("The offset ($offset) must be between 0 and the length ({$this->count()}) of the list");
         }
 

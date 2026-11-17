@@ -10,6 +10,8 @@ use Eldaqo\Collections\Set;
 use Eldaqo\Collections\SortDirection;
 use function Eldaqo\Collections\dictionaryOf;
 
+mutates(\Eldaqo\Collections\Dictionary::class);
+
 it('creates empty dictionary when no items provided', function () {
     $dictionary = new Dictionary();
     expect($dictionary->count())->toBe(0);
@@ -629,4 +631,39 @@ it('generates a value based hash that ignores order', function () {
     $dictionary = new Dictionary(new Pair('a', 1), new Pair('b', 2));
     expect($dictionary->getHash())->toBe((new Dictionary(new Pair('b', 2), new Pair('a', 1)))->getHash())
         ->and($dictionary->getHash())->not->toBe((new Dictionary(new Pair('a', 1), new Pair('b', 3)))->getHash());
+});
+
+it('starts iterating at the first element without rewinding', function () {
+    $dictionary = new Dictionary(new Pair('a', 1), new Pair('b', 2));
+
+    expect($dictionary->valid())->toBeTrue()
+        ->and($dictionary->current())->toBe(1);
+});
+
+it('generates different hashes when keys and values differ or are swapped', function () {
+    $hash = (new Dictionary(new Pair('a', 1)))->getHash();
+
+    expect($hash)->not->toBe((new Dictionary(new Pair(1, 'a')))->getHash())
+        ->and($hash)->not->toBe((new Dictionary(new Pair('b', 1)))->getHash());
+});
+
+it('returns a single random element by default', function (string $method) {
+    expect((new Dictionary(new Pair('a', 1), new Pair('b', 2), new Pair('c', 3)))->$method())->toHaveCount(1);
+})->with([
+    ['random'],
+    ['secureRandom'],
+]);
+
+it('can return as many random elements as the dictionary contains', function (string $method) {
+    expect((new Dictionary(new Pair('a', 1), new Pair('b', 2)))->$method(2))->toHaveCount(2);
+})->with([
+    ['random'],
+    ['secureRandom'],
+]);
+
+it('sorts dictionaries containing equal values', function () {
+    $dictionary = new Dictionary(new Pair('a', 2), new Pair('b', 1), new Pair('c', 2));
+
+    expect($dictionary->sort(SortDirection::DESCENDING))
+        ->toEqual(new Dictionary(new Pair('a', 2), new Pair('c', 2), new Pair('b', 1)));
 });

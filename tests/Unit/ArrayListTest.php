@@ -10,6 +10,13 @@ use Eldaqo\Collections\Set;
 use Eldaqo\Collections\SortDirection;
 use function Eldaqo\Collections\listOf;
 
+mutates(\Eldaqo\Collections\ArrayList::class);
+mutates(\Eldaqo\Collections\Traits\ListShared::class);
+mutates(\Eldaqo\Collections\Traits\CollectionShared::class);
+mutates(\Eldaqo\Collections\Traits\CountsElements::class);
+mutates(\Eldaqo\Collections\Traits\Enumerator::class);
+mutates(\Eldaqo\Collections\Object\GenerateValueHash::class);
+
 it('creates a list of the given items', function (array $initialItems, ArrayList $expectedList) {
     expect(new ArrayList($initialItems))->toEqual($expectedList);
 })->with([
@@ -461,4 +468,61 @@ it('hashes objects nested in arrays through their own hash', function () {
 
     expect((new ArrayList([[$hashable('x')]]))->getHash())->toBe((new ArrayList([[$hashable('x')]]))->getHash())
         ->and((new ArrayList([[$hashable('x')]]))->getHash())->not->toBe((new ArrayList([[$hashable('y')]]))->getHash());
+});
+
+it('starts iterating at the first element without rewinding', function () {
+    $list = new ArrayList([1, 2]);
+
+    expect($list->valid())->toBeTrue()
+        ->and($list->current())->toBe(1);
+});
+
+it('throws exception when trying to set a negative offset', function () {
+    (new ArrayList(['a', 'b']))->offsetSet(-1, 'dummy-value');
+})->throws(OutOfRangeException::class);
+
+it('does not throw when padding to the smallest valid length', function (string $method) {
+    expect((new ArrayList([1, 2, 3]))->$method(1, 0))->toEqual(new ArrayList([1, 2, 3]));
+})->with([
+    ['padLeft'],
+    ['padRight'],
+]);
+
+it('throws exception when trying to pad by zero', function (string $method) {
+    (new ArrayList([1, 2, 3]))->$method(0, 0);
+})->with([
+    ['padLeft'],
+    ['padRight'],
+])->throws(OutOfRangeException::class, 'The length must be greater than 0.');
+
+it('returns a single random element by default', function (string $method) {
+    expect((new ArrayList([1, 2, 3]))->$method())->toHaveCount(1);
+})->with([
+    ['random'],
+    ['secureRandom'],
+]);
+
+it('can return as many random elements as the list contains', function (string $method) {
+    $result = (new ArrayList([1, 2, 3]))->$method(3);
+
+    expect($result)->toHaveCount(3);
+})->with([
+    ['random'],
+    ['secureRandom'],
+]);
+
+it('sorts lists containing equal elements', function (SortDirection $direction, ArrayList $expectedList) {
+    expect((new ArrayList([2, 1, 2]))->sort($direction))->toEqual($expectedList);
+})->with([
+    [SortDirection::ASCENDING, new ArrayList([1, 2, 2])],
+    [SortDirection::DESCENDING, new ArrayList([2, 2, 1])],
+]);
+
+it('generates different hashes for lists with different elements or element types', function () {
+    expect((new ArrayList(['a', 'b']))->getHash())->not->toBe((new ArrayList(['a', 'c']))->getHash())
+        ->and((new ArrayList([1]))->getHash())->not->toBe((new ArrayList(['1']))->getHash());
+});
+
+it('generates a stable hash', function () {
+    expect((new ArrayList([1, 2]))->getHash())->toBe('2c9929dc0d00ed64');
 });

@@ -42,6 +42,7 @@
     "test": "vendor/bin/pest --ci --coverage --min=100",
     "cs": "vendor/bin/php-cs-fixer fix src/ --rules=@PSR12",
     "cs-check": "vendor/bin/php-cs-fixer fix src/ --rules=@PSR12 --dry-run --show-progress=dots",
-    "phpstan": "phpstan analyse -v"
+    "phpstan": "phpstan analyse -v",
+    "mutate": "vendor/bin/pest --mutate --parallel --min=95"
   }
 }
