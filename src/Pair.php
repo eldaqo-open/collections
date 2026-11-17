@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Eldaqo\Collections;
 
 use Eldaqo\Collections\Contracts\IPair;
-use Eldaqo\Collections\Object\GenerateSplObjectHash;
+use Eldaqo\Collections\Object\GenerateValueHash;
 
 /**
  * Represents an immutable key-value pair.
@@ -17,7 +17,7 @@ use Eldaqo\Collections\Object\GenerateSplObjectHash;
  */
 final readonly class Pair implements IPair
 {
-    use GenerateSplObjectHash;
+    use GenerateValueHash;
 
     /**
      * @param TKey $key
@@ -27,6 +27,11 @@ final readonly class Pair implements IPair
         private mixed $key,
         private mixed $value
     ) {
+    }
+
+    public function getHash(): string
+    {
+        return $this->hashOf([$this->key, $this->value], true);
     }
 
     public function key(): mixed

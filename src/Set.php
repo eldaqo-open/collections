@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Eldaqo\Collections;
 
 use Eldaqo\Collections\Contracts\ISet;
-use Eldaqo\Collections\Object\GenerateSplObjectHash;
+use Eldaqo\Collections\Object\GenerateValueHash;
 use Eldaqo\Collections\Object\Hashable;
 use Eldaqo\Collections\Traits\CollectionShared;
 use Eldaqo\Collections\Traits\CountsElements;
@@ -25,7 +25,7 @@ use OutOfRangeException;
  */
 final class Set implements ISet, Hashable
 {
-    use GenerateSplObjectHash;
+    use GenerateValueHash;
     use CollectionShared;
     use HashKeys;
     /** @use ListShared<T> */
@@ -53,6 +53,11 @@ final class Set implements ISet, Hashable
         foreach ($values as $value) {
             $this->add($value);
         }
+    }
+
+    public function getHash(): string
+    {
+        return $this->hashOf($this->values, false);
     }
 
     public function apply(callable $selector): void

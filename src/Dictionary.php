@@ -9,7 +9,7 @@ use Eldaqo\Collections\Contracts\IDictionary;
 use Eldaqo\Collections\Contracts\IList;
 use Eldaqo\Collections\Contracts\IPair;
 use Eldaqo\Collections\Contracts\ISet;
-use Eldaqo\Collections\Object\GenerateSplObjectHash;
+use Eldaqo\Collections\Object\GenerateValueHash;
 use Eldaqo\Collections\Object\Hashable;
 use Eldaqo\Collections\Traits\CollectionShared;
 use Eldaqo\Collections\Traits\CountsElements;
@@ -31,7 +31,7 @@ use ValueError;
  */
 final class Dictionary implements IDictionary, Hashable
 {
-    use GenerateSplObjectHash;
+    use GenerateValueHash;
     use CollectionShared;
     use HashKeys;
     use Enumerator;
@@ -72,6 +72,13 @@ final class Dictionary implements IDictionary, Hashable
                 $values->toArray()
             )
         );
+    }
+
+    public function getHash(): string
+    {
+        $pairHashes = array_map(fn (IPair $pair) => $this->hashOf([$pair->key(), $pair->value()], true), $this->values);
+
+        return $this->hashOf($pairHashes, false);
     }
 
     public function keys(): ISet

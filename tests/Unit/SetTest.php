@@ -447,3 +447,18 @@ it('checks if every element matches the given selector', function (Set $set, cal
     [new Set(), fn ($value) => $value > 0, true],
     [new Set(['a', 'b', 'c']), fn ($value) => is_string($value), true],
 ]);
+
+it('generates a value based hash that ignores order', function () {
+    expect((new Set([1, 2]))->getHash())->toBe((new Set([2, 1]))->getHash())
+        ->and((new Set([1, 2]))->getHash())->not->toBe((new Set([1, 3]))->getHash());
+});
+
+it('distinguishes floats exactly and treats signed zeros as equal', function () {
+    $set = new Set([0.1 + 0.2, 0.3, 0.0, -0.0]);
+    expect($set)->toHaveCount(3)
+        ->and($set->contains(0.3))->toBeTrue();
+});
+
+it('does not mix up float and string values', function () {
+    expect(new Set([1.5, '1.5']))->toHaveCount(2);
+});

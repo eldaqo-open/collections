@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Eldaqo\Collections\ArrayList;
 use Eldaqo\Collections\Dictionary;
+use Eldaqo\Collections\Object\Hashable;
 use Eldaqo\Collections\Pair;
 use Eldaqo\Collections\Set;
 use Eldaqo\Collections\SortDirection;
@@ -438,3 +439,26 @@ it('checks if every element matches the given selector', function (ArrayList $li
     [new ArrayList(['a', 'b', 'c']), fn ($value) => is_string($value), true],
 ]);
 
+
+it('generates a value based hash that respects order', function () {
+    expect((new ArrayList([1, 2]))->getHash())->toBe((new ArrayList([1, 2]))->getHash())
+        ->and((new ArrayList([1, 2]))->getHash())->not->toBe((new ArrayList([2, 1]))->getHash())
+        ->and((new ArrayList(['ab', 'c']))->getHash())->not->toBe((new ArrayList(['a', 'bc']))->getHash())
+        ->and((new ArrayList([1, 2]))->getHash())->not->toBe((new Set([1, 2]))->getHash());
+});
+
+it('hashes objects nested in arrays through their own hash', function () {
+    $hashable = fn (string $hash) => new class ($hash) implements Hashable {
+        public function __construct(private string $hash)
+        {
+        }
+
+        public function getHash(): string
+        {
+            return $this->hash;
+        }
+    };
+
+    expect((new ArrayList([[$hashable('x')]]))->getHash())->toBe((new ArrayList([[$hashable('x')]]))->getHash())
+        ->and((new ArrayList([[$hashable('x')]]))->getHash())->not->toBe((new ArrayList([[$hashable('y')]]))->getHash());
+});

@@ -23,3 +23,9 @@ it('returns a new pair with the specified value', function () {
     expect($newPair->key())->toBe(1)
         ->and($newPair->value())->toBe('b');
 });
+
+it('generates equal hashes for equal pairs and different hashes otherwise', function () {
+    expect((new Pair(1, 'a'))->getHash())->toBe((new Pair(1, 'a'))->getHash())
+        ->and((new Pair(1, 'a'))->getHash())->not->toBe((new Pair('1', 'a'))->getHash())
+        ->and((new Pair(1, 'a'))->getHash())->not->toBe((new Pair('a', 1))->getHash());
+});

@@ -6,7 +6,7 @@ namespace Eldaqo\Collections;
 
 use Eldaqo\Collections\Contracts\IDictionary;
 use Eldaqo\Collections\Contracts\IList;
-use Eldaqo\Collections\Object\GenerateSplObjectHash;
+use Eldaqo\Collections\Object\GenerateValueHash;
 use Eldaqo\Collections\Object\Hashable;
 use Eldaqo\Collections\Traits\CollectionShared;
 use Eldaqo\Collections\Traits\CountsElements;
@@ -24,7 +24,7 @@ use OutOfRangeException;
  */
 final class ArrayList implements IList, Hashable
 {
-    use GenerateSplObjectHash;
+    use GenerateValueHash;
     use CollectionShared;
     /** @use ListShared<T> */
     use ListShared;
@@ -44,6 +44,11 @@ final class ArrayList implements IList, Hashable
     public function __construct(array $items = [])
     {
         $this->values = array_values($items);
+    }
+
+    public function getHash(): string
+    {
+        return $this->hashOf($this->values, true);
     }
 
     public function apply(callable $selector): void

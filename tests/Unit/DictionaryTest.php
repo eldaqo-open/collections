@@ -624,3 +624,9 @@ it('checks if every element matches the given selector', function (Dictionary $d
     [new Dictionary(), fn ($value) => $value > 0, true],
     [new Dictionary(new Pair(0, 'x'), new Pair(1, 'y'), new Pair(2, 'z')), fn ($value) => is_string($value), true],
 ]);
+
+it('generates a value based hash that ignores order', function () {
+    $dictionary = new Dictionary(new Pair('a', 1), new Pair('b', 2));
+    expect($dictionary->getHash())->toBe((new Dictionary(new Pair('b', 2), new Pair('a', 1)))->getHash())
+        ->and($dictionary->getHash())->not->toBe((new Dictionary(new Pair('a', 1), new Pair('b', 3)))->getHash());
+});
