@@ -10,7 +10,6 @@ use Eldaqo\Collections\Object\Hashable;
 use Eldaqo\Collections\Traits\CollectionShared;
 use Eldaqo\Collections\Traits\CountsElements;
 use Eldaqo\Collections\Traits\HashKeys;
-use Eldaqo\Collections\Traits\Enumerator;
 use Eldaqo\Collections\Traits\ListShared;
 use InvalidArgumentException;
 use OutOfBoundsException;
@@ -30,7 +29,6 @@ final class Set implements ISet, Hashable
     use HashKeys;
     /** @use ListShared<T> */
     use ListShared;
-    use Enumerator;
     use CountsElements;
 
     /**
@@ -42,8 +40,6 @@ final class Set implements ISet, Hashable
      * @var list<T>
      */
     private array $values = [];
-
-    private int $pointer = 0;
 
     /**
      * @param list<T> $values
@@ -62,13 +58,9 @@ final class Set implements ISet, Hashable
 
     public function apply(callable $selector): void
     {
-        $pointer = $this->pointer;
-
         foreach ($this as $key => $value) {
             $this[$key] = $selector($value, $key);
         }
-
-        $this->pointer = $pointer;
     }
 
     public function offsetExists(mixed $offset): bool
@@ -195,13 +187,11 @@ final class Set implements ISet, Hashable
         return $this;
     }
 
-    private function valueAt(int $at): mixed
+    /**
+     * @return \Generator<int, T>
+     */
+    public function getIterator(): \Generator
     {
-        return $this->values[$at];
-    }
-
-    private function keyAt(int $at): int
-    {
-        return $at;
+        yield from $this->values;
     }
 }

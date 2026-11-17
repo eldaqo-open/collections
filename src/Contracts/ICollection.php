@@ -11,9 +11,9 @@ namespace Eldaqo\Collections\Contracts;
  * @template TValue
  *
  * @extends \ArrayAccess<TKey, TValue>
- * @extends \Iterator<TKey, TValue>
+ * @extends \IteratorAggregate<TKey, TValue>
  */
-interface ICollection extends \ArrayAccess, \Iterator, \Countable
+interface ICollection extends \ArrayAccess, \IteratorAggregate, \Countable
 {
     /**
      * Returns a list of the keys in the collection.

@@ -14,7 +14,6 @@ mutates(\Eldaqo\Collections\ArrayList::class);
 mutates(\Eldaqo\Collections\Traits\ListShared::class);
 mutates(\Eldaqo\Collections\Traits\CollectionShared::class);
 mutates(\Eldaqo\Collections\Traits\CountsElements::class);
-mutates(\Eldaqo\Collections\Traits\Enumerator::class);
 mutates(\Eldaqo\Collections\Object\GenerateValueHash::class);
 
 it('creates a list of the given items', function (array $initialItems, ArrayList $expectedList) {
@@ -470,12 +469,6 @@ it('hashes objects nested in arrays through their own hash', function () {
         ->and((new ArrayList([[$hashable('x')]]))->getHash())->not->toBe((new ArrayList([[$hashable('y')]]))->getHash());
 });
 
-it('starts iterating at the first element without rewinding', function () {
-    $list = new ArrayList([1, 2]);
-
-    expect($list->valid())->toBeTrue()
-        ->and($list->current())->toBe(1);
-});
 
 it('throws exception when trying to set a negative offset', function () {
     (new ArrayList(['a', 'b']))->offsetSet(-1, 'dummy-value');
@@ -525,4 +518,16 @@ it('generates different hashes for lists with different elements or element type
 
 it('generates a stable hash', function () {
     expect((new ArrayList([1, 2]))->getHash())->toBe('2c9929dc0d00ed64');
+});
+
+it('supports nested iteration over the same collection', function () {
+    $list = new ArrayList([1, 2]);
+    $pairs = [];
+    foreach ($list as $a) {
+        foreach ($list as $b) {
+            $pairs[] = [$a, $b];
+        }
+    }
+
+    expect($pairs)->toBe([[1, 1], [1, 2], [2, 1], [2, 2]]);
 });

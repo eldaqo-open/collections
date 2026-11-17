@@ -10,7 +10,6 @@ use Eldaqo\Collections\Object\GenerateValueHash;
 use Eldaqo\Collections\Object\Hashable;
 use Eldaqo\Collections\Traits\CollectionShared;
 use Eldaqo\Collections\Traits\CountsElements;
-use Eldaqo\Collections\Traits\Enumerator;
 use Eldaqo\Collections\Traits\ListShared;
 use OutOfBoundsException;
 use OutOfRangeException;
@@ -28,15 +27,12 @@ final class ArrayList implements IList, Hashable
     use CollectionShared;
     /** @use ListShared<T> */
     use ListShared;
-    use Enumerator;
     use CountsElements;
 
     /**
      * @var list<T>
      */
     private array $values;
-
-    private int $pointer = 0;
 
     /**
      * @param T[] $items
@@ -184,13 +180,11 @@ final class ArrayList implements IList, Hashable
         return $this;
     }
 
-    private function valueAt(int $at): mixed
+    /**
+     * @return \Generator<int, T>
+     */
+    public function getIterator(): \Generator
     {
-        return $this->values[$at];
-    }
-
-    private function keyAt(int $at): int
-    {
-        return $at;
+        yield from $this->values;
     }
 }

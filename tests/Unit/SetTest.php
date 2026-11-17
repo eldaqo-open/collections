@@ -466,12 +466,6 @@ it('does not mix up float and string values', function () {
     expect(new Set([1.5, '1.5']))->toHaveCount(2);
 });
 
-it('starts iterating at the first element without rewinding', function () {
-    $set = new Set([1, 2]);
-
-    expect($set->valid())->toBeTrue()
-        ->and($set->current())->toBe(1);
-});
 
 it('throws exception when trying to set the offset right after the last element', function () {
     (new Set([1, 2, 3]))->offsetSet(3, 4);
@@ -489,4 +483,8 @@ it('hashes array elements by their keys, values, types and boundaries', function
 
 it('distinguishes true from false', function () {
     expect(new Set([true, false]))->toHaveCount(2);
+});
+
+it('does not mix up integer and string values', function () {
+    expect(new Set([1, '1']))->toHaveCount(2);
 });

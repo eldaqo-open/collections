@@ -22,7 +22,7 @@ trait GenerateValueHash
      */
     private function hashOf(array $elements, bool $ordered): string
     {
-        $parts = array_map($this->toTaggedKey(...), $elements);
+        $parts = array_map($this->toInternalKey(...), $elements);
 
         if (!$ordered) {
             sort($parts, SORT_STRING);

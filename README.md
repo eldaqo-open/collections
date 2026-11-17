@@ -70,7 +70,7 @@ All collections are derived from the interface `\Eldaqo\Collections\Contracts\IC
 The base `ICollection` interface extends
 - `\Countable` - so you can simply count the number of elements of a collection by passing it to the `count` function
 - `\ArrayAccess` - so you can access and set elements of a collection as if it were a traditional array
-- `\Iterator` - so you can loop through the collection
+- `\IteratorAggregate` - so you can loop through the collection (each `foreach` gets its own iterator, so nested loops work)
 
 ---
 

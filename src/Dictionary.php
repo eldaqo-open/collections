@@ -14,7 +14,6 @@ use Eldaqo\Collections\Object\Hashable;
 use Eldaqo\Collections\Traits\CollectionShared;
 use Eldaqo\Collections\Traits\CountsElements;
 use Eldaqo\Collections\Traits\HashKeys;
-use Eldaqo\Collections\Traits\Enumerator;
 use OutOfBoundsException;
 use OutOfRangeException;
 use Random\Engine\Secure;
@@ -34,7 +33,6 @@ final class Dictionary implements IDictionary, Hashable
     use GenerateValueHash;
     use CollectionShared;
     use HashKeys;
-    use Enumerator;
     use CountsElements;
 
     /**
@@ -46,8 +44,6 @@ final class Dictionary implements IDictionary, Hashable
      * @var list<IPair<TKey, TValue>>
      */
     private array $values = [];
-
-    private int $pointer = 0;
 
     /**
      * @param IPair<TKey, TValue> ...$pairs
@@ -161,13 +157,9 @@ final class Dictionary implements IDictionary, Hashable
 
     public function apply(callable $selector): void
     {
-        $pointer = $this->pointer;
-
         foreach ($this->values as $offset => $pair) {
             $this->values[$offset] = $pair->withValue($selector($pair->value(), $pair->key()));
         }
-
-        $this->pointer = $pointer;
     }
 
     public function chunk(int $length): IList
@@ -367,13 +359,13 @@ final class Dictionary implements IDictionary, Hashable
         return $this;
     }
 
-    private function valueAt(int $at): mixed
+    /**
+     * @return \Generator<TKey, TValue>
+     */
+    public function getIterator(): \Generator
     {
-        return $this->values[$at]->value();
-    }
-
-    private function keyAt(int $at): mixed
-    {
-        return $this->values[$at]->key();
+        foreach ($this->values as $pair) {
+            yield $pair->key() => $pair->value();
+        }
     }
 }

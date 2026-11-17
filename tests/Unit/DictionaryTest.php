@@ -633,12 +633,6 @@ it('generates a value based hash that ignores order', function () {
         ->and($dictionary->getHash())->not->toBe((new Dictionary(new Pair('a', 1), new Pair('b', 3)))->getHash());
 });
 
-it('starts iterating at the first element without rewinding', function () {
-    $dictionary = new Dictionary(new Pair('a', 1), new Pair('b', 2));
-
-    expect($dictionary->valid())->toBeTrue()
-        ->and($dictionary->current())->toBe(1);
-});
 
 it('generates different hashes when keys and values differ or are swapped', function () {
     $hash = (new Dictionary(new Pair('a', 1)))->getHash();
@@ -666,4 +660,22 @@ it('sorts dictionaries containing equal values', function () {
 
     expect($dictionary->sort(SortDirection::DESCENDING))
         ->toEqual(new Dictionary(new Pair('a', 2), new Pair('c', 2), new Pair('b', 1)));
+});
+
+it('iterates with the original keys, including objects', function () {
+    $key = new stdClass();
+    $result = [];
+    foreach (new Dictionary(new Pair($key, 1), new Pair('b', 2)) as $k => $v) {
+        $result[] = [$k, $v];
+    }
+
+    expect($result)->toBe([[$key, 1], ['b', 2]]);
+});
+
+it('keeps integer and string keys apart', function () {
+    $dictionary = new Dictionary(new Pair(1, 'int'), new Pair('1', 'string'), new Pair(true, 'bool'), new Pair('true', 'string'));
+
+    expect($dictionary)->toHaveCount(4)
+        ->and($dictionary[1])->toBe('int')
+        ->and($dictionary['1'])->toBe('string');
 });
