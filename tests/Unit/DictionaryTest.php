@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Axonode\Collections\ArrayList;
-use Axonode\Collections\Dictionary;
-use Axonode\Collections\Object\Hashable;
-use Axonode\Collections\Pair;
-use Axonode\Collections\Set;
-use Axonode\Collections\SortDirection;
-use function Axonode\Collections\dictionaryOf;
+use Eldaqo\Collections\ArrayList;
+use Eldaqo\Collections\Dictionary;
+use Eldaqo\Collections\Object\Hashable;
+use Eldaqo\Collections\Pair;
+use Eldaqo\Collections\Set;
+use Eldaqo\Collections\SortDirection;
+use function Eldaqo\Collections\dictionaryOf;
 
 it('creates empty dictionary when no items provided', function () {
     $dictionary = new Dictionary();

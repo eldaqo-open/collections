@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Doubles\Object;
 
-use Axonode\Collections\Object\GeneratesObjectHash;
-use Axonode\Collections\Object\Hashable;
+use Eldaqo\Collections\Object\GeneratesObjectHash;
+use Eldaqo\Collections\Object\Hashable;
 
 final readonly class UsesGeneratesObjectHash implements Hashable
 {

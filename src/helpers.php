@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Axonode\Collections;
+namespace Eldaqo\Collections;
 
 if (!function_exists('listOf')) {
     /**

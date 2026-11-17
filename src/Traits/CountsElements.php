@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Axonode\Collections\Traits;
+namespace Eldaqo\Collections\Traits;
 
 /**
  * @internal

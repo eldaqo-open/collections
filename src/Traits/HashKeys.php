@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Axonode\Collections\Traits;
+namespace Eldaqo\Collections\Traits;
 
-use Axonode\Collections\Object\Hashable;
+use Eldaqo\Collections\Object\Hashable;
 
 /**
  * @internal

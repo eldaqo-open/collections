@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Axonode\Collections\Traits;
+namespace Eldaqo\Collections\Traits;
 
-use Axonode\Collections\Contracts\ICollection;
-use Axonode\Collections\Contracts\IDictionary;
-use Axonode\Collections\Contracts\IList;
+use Eldaqo\Collections\Contracts\ICollection;
+use Eldaqo\Collections\Contracts\IDictionary;
+use Eldaqo\Collections\Contracts\IList;
 
 /**
  * @internal

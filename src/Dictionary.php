@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Axonode\Collections;
+namespace Eldaqo\Collections;
 
-use Axonode\Collections\Contracts\ICollection;
-use Axonode\Collections\Contracts\IDictionary;
-use Axonode\Collections\Contracts\IList;
-use Axonode\Collections\Contracts\IPair;
-use Axonode\Collections\Contracts\ISet;
-use Axonode\Collections\Object\GeneratesObjectHash;
-use Axonode\Collections\Object\Hashable;
-use Axonode\Collections\Traits\CollectionShared;
-use Axonode\Collections\Traits\CountsElements;
-use Axonode\Collections\Traits\HashKeys;
-use Axonode\Collections\Traits\Enumerator;
+use Eldaqo\Collections\Contracts\ICollection;
+use Eldaqo\Collections\Contracts\IDictionary;
+use Eldaqo\Collections\Contracts\IList;
+use Eldaqo\Collections\Contracts\IPair;
+use Eldaqo\Collections\Contracts\ISet;
+use Eldaqo\Collections\Object\GeneratesObjectHash;
+use Eldaqo\Collections\Object\Hashable;
+use Eldaqo\Collections\Traits\CollectionShared;
+use Eldaqo\Collections\Traits\CountsElements;
+use Eldaqo\Collections\Traits\HashKeys;
+use Eldaqo\Collections\Traits\Enumerator;
 use OutOfBoundsException;
 use OutOfRangeException;
 use Random\Engine\Secure;

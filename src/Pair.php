@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Axonode\Collections;
+namespace Eldaqo\Collections;
 
-use Axonode\Collections\Contracts\IPair;
-use Axonode\Collections\Object\GeneratesObjectHash;
+use Eldaqo\Collections\Contracts\IPair;
+use Eldaqo\Collections\Object\GeneratesObjectHash;
 
 /**
  * Represents an immutable key-value pair.

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Axonode\Collections\ArrayList;
-use Axonode\Collections\Dictionary;
-use Axonode\Collections\Pair;
-use Axonode\Collections\Set;
-use Axonode\Collections\SortDirection;
-use function Axonode\Collections\listOf;
+use Eldaqo\Collections\ArrayList;
+use Eldaqo\Collections\Dictionary;
+use Eldaqo\Collections\Pair;
+use Eldaqo\Collections\Set;
+use Eldaqo\Collections\SortDirection;
+use function Eldaqo\Collections\listOf;
 
 it('creates a list of the given items', function (array $initialItems, ArrayList $expectedList) {
     expect(new ArrayList($initialItems))->toEqual($expectedList);

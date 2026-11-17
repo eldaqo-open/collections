@@ -1,6 +1,6 @@
 services:
   php:
-    container_name: axonode-collections-php
+    container_name: eldaqo-collections-php
     build:
       context: .
       dockerfile: Dockerfile

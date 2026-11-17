@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Axonode\Collections\Pair;
+use Eldaqo\Collections\Pair;
 
 it('returns the key and value of the pair correctly', function () {
     $pair = new Pair(1, 'a');

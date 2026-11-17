@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Axonode\Collections\Contracts;
+namespace Eldaqo\Collections\Contracts;
 
-use Axonode\Collections\Object\Hashable;
+use Eldaqo\Collections\Object\Hashable;
 
 /**
  * Represents an immutable key-value pair.

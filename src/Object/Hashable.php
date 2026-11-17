@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Axonode\Collections\Object;
+namespace Eldaqo\Collections\Object;
 
 /**
  * Represents an object that can be uniquely identified by a hash.

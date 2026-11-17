@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Axonode\Collections\Contracts;
+namespace Eldaqo\Collections\Contracts;
 
 /**
  * Represents a collection of items.

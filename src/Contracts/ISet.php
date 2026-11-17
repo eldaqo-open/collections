@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Axonode\Collections\Contracts;
+namespace Eldaqo\Collections\Contracts;
 
-use Axonode\Collections\SortDirection;
+use Eldaqo\Collections\SortDirection;
 
 /**
  * Represents a list of unique items. The items are indexed by sequential integers.

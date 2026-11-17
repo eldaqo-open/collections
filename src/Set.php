@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Axonode\Collections;
+namespace Eldaqo\Collections;
 
-use Axonode\Collections\Contracts\ISet;
-use Axonode\Collections\Object\GeneratesObjectHash;
-use Axonode\Collections\Object\Hashable;
-use Axonode\Collections\Traits\CollectionShared;
-use Axonode\Collections\Traits\CountsElements;
-use Axonode\Collections\Traits\HashKeys;
-use Axonode\Collections\Traits\Enumerator;
-use Axonode\Collections\Traits\ListShared;
+use Eldaqo\Collections\Contracts\ISet;
+use Eldaqo\Collections\Object\GeneratesObjectHash;
+use Eldaqo\Collections\Object\Hashable;
+use Eldaqo\Collections\Traits\CollectionShared;
+use Eldaqo\Collections\Traits\CountsElements;
+use Eldaqo\Collections\Traits\HashKeys;
+use Eldaqo\Collections\Traits\Enumerator;
+use Eldaqo\Collections\Traits\ListShared;
 use InvalidArgumentException;
 use OutOfBoundsException;
 use OutOfRangeException;

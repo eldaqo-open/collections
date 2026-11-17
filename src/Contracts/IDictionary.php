@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Axonode\Collections\Contracts;
+namespace Eldaqo\Collections\Contracts;
 
-use Axonode\Collections\SortDirection;
+use Eldaqo\Collections\SortDirection;
 
 /**
  * Represents a collection of items, where each item is associated with a unique key. The keys may be any of the
