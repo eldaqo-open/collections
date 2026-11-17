@@ -145,6 +145,7 @@ final class Dictionary implements IDictionary, Hashable
 
         unset($this->values[$this->keys[$internalKey]]);
 
+        $this->keys = [];
         $this->values = array_values($this->values);
         foreach ($this->values as $index => $pair) {
             $this->keys[$this->toInternalKey($pair->key())] = $index;

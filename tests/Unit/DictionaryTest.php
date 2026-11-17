@@ -172,7 +172,7 @@ it('throws exception when trying to unset non-existing offset', function () {
 
 it('removes the item at the given offset', function (Dictionary $dictionary, mixed $offset, Dictionary $expectedDictionary) {
     unset($dictionary[$offset]);
-    expect($dictionary)->toBe($dictionary);
+    expect($dictionary)->toEqual($expectedDictionary);
 })->with([
     [
         new Dictionary(new Pair('a', 1), new Pair('b', 2), new Pair('c', 3)),
