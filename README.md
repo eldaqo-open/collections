@@ -1,5 +1,8 @@
 # Eldaqo Collections
 
+[![Static analysis](https://github.com/eldaqo-open/collections/actions/workflows/static-analysis.yml/badge.svg?event=release)](https://github.com/eldaqo-open/collections/actions/workflows/static-analysis.yml)
+[![Tests](https://github.com/eldaqo-open/collections/actions/workflows/test.yml/badge.svg?event=release)](https://github.com/eldaqo-open/collections/actions/workflows/test.yml)
+
 ## Table of contents
 1. [Description](#description)
 2. [Requirements](#requirements)
