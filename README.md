@@ -44,6 +44,9 @@ For mockability, the library defines various interfaces which are implemented by
 
 The `Hashable` interface represents an object, which can be uniquely identified by a hash. 
 The hash is a string, which is used to compare objects for equality. 
+All collections compare values this way (in `contains`, `search`, `diff`, `intersect`, set membership and dictionary
+keys): `Hashable` objects are equal when their hashes match, other objects only when they are the same instance, and
+scalars and arrays when they have the same type and value.
 If you do not want to customise how the hash is created, this package provides a trait 
 (`\Eldaqo\Collections\Object\GenerateSplObjectHash`), which implements the `getHash` method using the `spl_object_hash`
 function.
@@ -123,7 +126,7 @@ operation which mutates the number or order of elements in the list, the keys ar
 You can get a new instance of an `Set` by calling its constructor:
 ```php
 $emptySet = new \Eldaqo\Collections\Set();
-$anotherSet = new \Eldaqo\Collections\ArraySet(['item1', 'item2', 'item2']); // will result in ['item1', 'item2']
+$anotherSet = new \Eldaqo\Collections\Set(['item1', 'item2', 'item2']); // will result in ['item1', 'item2']
 ```
 
 ---

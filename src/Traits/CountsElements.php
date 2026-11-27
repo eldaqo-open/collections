@@ -30,4 +30,13 @@ trait CountsElements
             throw new \UnderflowException('The collection is empty.');
         }
     }
+
+    private function assertCanPick(int $count): void
+    {
+        $this->assertIsNotEmpty();
+
+        if ($count < 1 || $count > $this->count()) {
+            throw new \OutOfRangeException('The count must be between 1 and the number of elements in the collection.');
+        }
+    }
 }

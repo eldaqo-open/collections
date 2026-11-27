@@ -568,7 +568,7 @@ it('removes and returns the first item of the dictionary', function () {
 it('sorts the dictionary into the given direction', function (SortDirection $direction, Dictionary $expectedDictionary) {
     $dictionary = new Dictionary(new Pair('a', 1), new Pair('b', 3), new Pair('c', 2));
     $dictionary->sort($direction);
-    expect($dictionary)->toEqual($expectedDictionary);
+    expect(iterator_to_array($dictionary))->toBe(iterator_to_array($expectedDictionary));
 })->with([
     [
         SortDirection::ASCENDING,
@@ -595,7 +595,7 @@ it('sorts the dictionary by the given selector', function () {
 
     $dictionary->sortBy(static fn (Pair $a, Pair $b) => ord($a->key()) <=> ord($b->key()));
 
-    expect($dictionary)->toEqual($expectedDictionary);
+    expect(iterator_to_array($dictionary))->toBe(iterator_to_array($expectedDictionary));
 });
 
 it('checks if the collection is not empty', function (Dictionary $dictionary, bool $expectedResult) {
@@ -679,3 +679,57 @@ it('keeps integer and string keys apart', function () {
         ->and($dictionary[1])->toBe('int')
         ->and($dictionary['1'])->toBe('string');
 });
+
+it('compares values strictly in diff and intersect', function () {
+    $dictionary = new Dictionary(new Pair('a', 1), new Pair('b', [2]));
+
+    expect($dictionary->diff(new ArrayList(['1', [2]]))->keys()->toArray())->toBe(['a'])
+        ->and($dictionary->intersect(new ArrayList(['1', [2]]))->keys()->toArray())->toBe(['b']);
+});
+
+it('keeps the order of the remaining keys after unsetting and shifting', function () {
+    $dictionary = dictionaryOf(['a' => 1, 'b' => 2, 'c' => 3, 'd' => 4]);
+    unset($dictionary['b']);
+    $dictionary->shift();
+    $dictionary['a'] = 5;
+
+    expect(iterator_to_array($dictionary))->toBe(['c' => 3, 'd' => 4, 'a' => 5]);
+});
+
+it('keeps the position of a key when its value is updated', function () {
+    $dictionary = dictionaryOf(['a' => 1, 'b' => 2]);
+    $dictionary['a'] = 3;
+
+    expect($dictionary)->toEqual(dictionaryOf(['a' => 3, 'b' => 2]))
+        ->and($dictionary)->not->toEqual(dictionaryOf(['b' => 2, 'a' => 3]));
+});
+
+it('searches and checks values by hash', function () {
+    $dictionary = new Dictionary(new Pair('a', new ArrayList([1])), new Pair('b', 2));
+
+    expect($dictionary->search(new ArrayList([1])))->toBe('a')
+        ->and($dictionary->contains(new ArrayList([1])))->toBeTrue()
+        ->and($dictionary->search('2'))->toBeNull()
+        ->and($dictionary->search(2))->toBe('b');
+});
+
+it('counts values by hash and keeps their first position', function () {
+    $dictionary = dictionaryOf(['a' => 'x', 'b' => 'y', 'c' => 'x']);
+
+    expect($dictionary->countValues())->toEqual(dictionaryOf(['x' => 2, 'y' => 1]));
+});
+
+it('throws exception when the dictionary would contain itself', function (callable $addSelf) {
+    $dictionary = dictionaryOf(['a' => 1]);
+
+    expect(fn () => $addSelf($dictionary))->toThrow(\Eldaqo\Collections\Exceptions\SelfReferenceException::class)
+        ->and($dictionary)->toEqual(dictionaryOf(['a' => 1]));
+})->with([
+    'as value' => [fn (Dictionary $dictionary) => $dictionary['b'] = $dictionary],
+    'as key' => [fn (Dictionary $dictionary) => $dictionary[$dictionary] = 'b'],
+    'apply' => [fn (Dictionary $dictionary) => $dictionary->apply(fn () => $dictionary)],
+]);
+
+it('throws exception when picking less than one random element from the dictionary', function () {
+    dictionaryOf(['a' => 1])->random(0);
+})->throws(OutOfRangeException::class, 'The count must be between 1 and the number of elements in the collection.');

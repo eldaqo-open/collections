@@ -341,7 +341,7 @@ it('throws exception when trying to retrieve more random elements from the list 
 })->with([
     ['random'],
     ['secureRandom']
-])->throws(OutOfRangeException::class, 'The count must be less than or equal to the number of elements in the list.');
+])->throws(OutOfRangeException::class, 'The count must be between 1 and the number of elements in the collection.');
 
 it('returns a dictionary of $count random elements from the list', function () {
     $list = new ArrayList([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
@@ -517,7 +517,7 @@ it('generates different hashes for lists with different elements or element type
 });
 
 it('generates a stable hash', function () {
-    expect((new ArrayList([1, 2]))->getHash())->toBe('2c9929dc0d00ed64');
+    expect((new ArrayList([1, 2]))->getHash())->toBe('ef791abe3a79862c40ad0385a1d3e805d38f6c49eaa3e917f57ddd327cd0e1b4');
 });
 
 it('supports nested iteration over the same collection', function () {
@@ -530,4 +530,91 @@ it('supports nested iteration over the same collection', function () {
     }
 
     expect($pairs)->toBe([[1, 1], [1, 2], [2, 1], [2, 2]]);
+});
+
+it('appends with the empty offset', function () {
+    $list = new ArrayList(['a']);
+    $list[] = 'b';
+
+    expect($list->toArray())->toBe(['a', 'b']);
+});
+
+it('compares values strictly and supports objects in diff and intersect', function () {
+    $object = new stdClass();
+
+    expect((new ArrayList([1, 2]))->diff(new ArrayList(['1']))->values()->toArray())->toBe([1, 2])
+        ->and((new ArrayList([1, 2]))->intersect(new ArrayList(['1', 2]))->values()->toArray())->toBe([2])
+        ->and((new ArrayList([$object, new stdClass()]))->diff(new ArrayList([$object]))->keys()->toArray())->toBe([1])
+        ->and((new ArrayList([$object, new stdClass()]))->intersect(new ArrayList([$object]))->keys()->toArray())->toBe([0])
+        ->and((new ArrayList([new ArrayList([1])]))->intersect(new ArrayList([new ArrayList([1])]))->count())->toBe(1);
+});
+
+it('searches and checks values by hash', function () {
+    $list = new ArrayList(['x', new ArrayList([1]), 1]);
+
+    expect($list->search(new ArrayList([1])))->toBe(1)
+        ->and($list->contains(new ArrayList([1])))->toBeTrue()
+        ->and($list->contains(new ArrayList([2])))->toBeFalse()
+        ->and($list->search('1'))->toBeNull()
+        ->and($list->search(1))->toBe(2);
+});
+
+it('throws exception when setting a non-integer offset', function (mixed $offset) {
+    $list = new ArrayList(['a', 'b']);
+
+    expect(fn () => $list[$offset] = 'c')->toThrow(TypeError::class)
+        ->and($list->toArray())->toBe(['a', 'b']);
+})->with(['01', '1', 1.0]);
+
+it('searches floats and arrays by hash without mixing up types', function () {
+    $list = new ArrayList([1, '1.5', 1.5, [1], NAN]);
+
+    expect($list->search(1.5))->toBe(2)
+        ->and($list->search([1]))->toBe(3)
+        ->and($list->search(NAN))->toBe(4)
+        ->and($list->search(true))->toBeNull()
+        ->and($list->search(null))->toBeNull();
+});
+
+it('counts values by hash', function () {
+    $counts = (new ArrayList([new ArrayList([1]), 'a', new ArrayList([1])]))->countValues();
+
+    expect($counts->count())->toBe(2)
+        ->and($counts[new ArrayList([1])])->toBe(2)
+        ->and($counts['a'])->toBe(1);
+});
+
+it('throws exception when picking less than one random element', function (string $method, int $count) {
+    (new ArrayList([1, 2]))->$method($count);
+})->with([
+    ['random', 0],
+    ['secureRandom', -1],
+])->throws(OutOfRangeException::class, 'The count must be between 1 and the number of elements in the collection.');
+
+it('throws exception when the list would contain itself', function (callable $addSelf) {
+    $list = new ArrayList(['a']);
+
+    expect(fn () => $addSelf($list))->toThrow(\Eldaqo\Collections\Exceptions\SelfReferenceException::class, 'A collection cannot contain itself.')
+        ->and($list->toArray())->toBe(['a']);
+})->with([
+    'offset set' => [fn (ArrayList $list) => $list[0] = $list],
+    'append' => [fn (ArrayList $list) => $list[] = $list],
+    'push' => [fn (ArrayList $list) => $list->push('b', $list)],
+    'pad left' => [fn (ArrayList $list) => $list->padLeft(3, $list)],
+    'pad right' => [fn (ArrayList $list) => $list->padRight(3, $list)],
+    'apply' => [fn (ArrayList $list) => $list->apply(fn () => $list)],
+]);
+
+it('allows another list with the same contents', function () {
+    $list = new ArrayList(['a']);
+    $list->push(new ArrayList(['a']));
+
+    expect($list->count())->toBe(2);
+});
+
+it('passes the offset to the apply selector', function () {
+    $list = new ArrayList(['a', 'b']);
+    $list->apply(fn (string $value, int $offset) => $value . $offset);
+
+    expect($list->toArray())->toBe(['a0', 'b1']);
 });

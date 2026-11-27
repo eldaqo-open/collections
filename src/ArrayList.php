@@ -49,9 +49,10 @@ final class ArrayList implements IList, Hashable
 
     public function apply(callable $selector): void
     {
-        for ($i = 0; $i < $this->count(); $i++) {
-            $this->values[$i] = $selector($this->values[$i], $i);
-        }
+        $values = array_map($selector, $this->values, array_keys($this->values));
+        $this->assertIsNotSelf(...$values);
+
+        $this->values = $values;
     }
 
     public function offsetExists(mixed $offset): bool
@@ -70,11 +71,18 @@ final class ArrayList implements IList, Hashable
 
     public function offsetSet(mixed $offset, mixed $value): void
     {
+        $offset ??= $this->count();
+
+        // PHP keeps non-canonical numeric strings like "01" as string keys, which would break the list.
+        if (!is_int($offset)) {
+            throw new \TypeError('The offset must be an integer.');
+        }
+
         if ($offset < 0 || $offset > $this->count()) {
             throw new OutOfRangeException("The offset ($offset) must be between 0 and the length ({$this->count()}) of the list");
         }
 
-        // @phpstan-ignore assign.propertyType
+        $this->assertIsNotSelf($value);
         $this->values[$offset] = $value;
     }
 
@@ -90,18 +98,12 @@ final class ArrayList implements IList, Hashable
 
     public function contains(mixed $value): bool
     {
-        return in_array($value, $this->values, true);
+        return $this->search($value) !== null;
     }
 
     public function countValues(): IDictionary
     {
-        $result = new Dictionary();
-
-        foreach ($this->values as $value) {
-            $result[$value] = $result->offsetExists($value) ? $result[$value] + 1 : 1;
-        }
-
-        return $result;
+        return $this->toDictionary()->countValues();
     }
 
     public function padLeft(int $length, mixed $value): self
@@ -128,6 +130,7 @@ final class ArrayList implements IList, Hashable
 
     private function pad(int $length, mixed $value): void
     {
+        $this->assertIsNotSelf($value);
         $this->values = array_pad($this->values, $length, $value);
     }
 
@@ -143,6 +146,7 @@ final class ArrayList implements IList, Hashable
 
     public function push(mixed ...$values): void
     {
+        $this->assertIsNotSelf(...$values);
         array_push($this->values, ...$values);
     }
 

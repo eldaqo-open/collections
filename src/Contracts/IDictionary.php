@@ -40,6 +40,15 @@ interface IDictionary extends ICollection
     public function countValues(): IDictionary;
 
     /**
+     * Filtering the dictionary by passing each element in it to the given callback. If the callback returns true, the element will be included in the resulting dictionary.
+     *
+     * @param callable(TValue, TKey=): bool $selector
+     *
+     * @return IDictionary<TKey, TValue>
+     */
+    public function filter(callable $selector): IDictionary;
+
+    /**
      * Search for all items in the dictionary that match the given selector, and return a list of their corresponding keys.
      *
      * @param callable(TValue): bool $selector

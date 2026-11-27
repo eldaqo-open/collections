@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Eldaqo\Collections;
 
-if (!function_exists('listOf')) {
+if (!function_exists(__NAMESPACE__ . '\\listOf')) {
     /**
      * @template T
      *
@@ -18,7 +18,7 @@ if (!function_exists('listOf')) {
     }
 }
 
-if (!function_exists('setOf')) {
+if (!function_exists(__NAMESPACE__ . '\\setOf')) {
     /**
      * @template T
      *
@@ -32,7 +32,7 @@ if (!function_exists('setOf')) {
     }
 }
 
-if (!function_exists('dictionaryOf')) {
+if (!function_exists(__NAMESPACE__ . '\\dictionaryOf')) {
     /**
      * @template TKey
      * @template TValue

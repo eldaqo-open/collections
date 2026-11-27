@@ -358,7 +358,7 @@ it('throws exception when trying to retrieve more random elements from the set t
 })->with([
     ['random'],
     ['secureRandom'],
-])->throws(OutOfRangeException::class, 'The count must be less than or equal to the number of elements in the list.');
+])->throws(OutOfRangeException::class, 'The count must be between 1 and the number of elements in the collection.');
 
 it('returns a dictionary with count elements randomly picked from the set', function (string $method) {
     $set = new Set(['a', 'b', 'c', 'd', 'e']);
@@ -488,3 +488,88 @@ it('distinguishes true from false', function () {
 it('does not mix up integer and string values', function () {
     expect(new Set([1, '1']))->toHaveCount(2);
 });
+
+it('adds the value with the empty offset', function () {
+    $set = new Set(['a']);
+    $set[] = 'b';
+    $set[] = 'a';
+
+    expect($set->toArray())->toBe(['a', 'b']);
+});
+
+it('passes the offset to the apply selector', function () {
+    $set = new Set(['a', 'b']);
+    $set->apply(fn (string $value, int $offset) => $value . $offset);
+
+    expect($set->toArray())->toBe(['a0', 'b1']);
+});
+
+it('sets the first offset', function () {
+    $set = new Set(['a', 'b']);
+    $set[0] = 'c';
+
+    expect($set->toArray())->toBe(['c', 'b']);
+});
+
+it('applies a selector that swaps existing values', function () {
+    $set = new Set([1, 2]);
+    $set->apply(fn (int $value) => 3 - $value);
+
+    expect($set->toArray())->toBe([2, 1])
+        ->and($set->search(1))->toBe(1);
+});
+
+it('leaves the set unchanged when the selector produces duplicates', function () {
+    $set = new Set([1, 2, 3]);
+
+    expect(fn () => $set->apply(fn (int $value) => $value === 3 ? 11 : $value + 10))
+        ->toThrow(InvalidArgumentException::class)
+        ->and($set->toArray())->toBe([1, 2, 3]);
+});
+
+it('keeps positions correct after removing a value from the middle', function () {
+    $set = new Set(['a', 'b', 'c', 'd']);
+    $set->remove('b');
+    $set[2] = 'e';
+
+    expect($set->toArray())->toBe(['a', 'c', 'e'])
+        ->and($set->search('c'))->toBe(1)
+        ->and($set->contains('d'))->toBeFalse();
+});
+
+it('replaces a value with an equal value at the same offset', function () {
+    $replacement = new ArrayList([1]);
+    $set = new Set([new ArrayList([1]), 'a']);
+    $set[0] = $replacement;
+
+    expect($set->count())->toBe(2)
+        ->and($set[0])->toBe($replacement)
+        ->and($set->search(new ArrayList([1])))->toBe(0);
+});
+
+it('searches values by hash', function () {
+    $set = new Set(['a', new ArrayList([1])]);
+
+    expect($set->search(new ArrayList([1])))->toBe(1)
+        ->and($set->search('b'))->toBeNull();
+});
+
+it('throws exception when setting a non-integer offset', function (mixed $offset) {
+    $set = new Set(['a', 'b']);
+
+    expect(fn () => $set[$offset] = 'c')->toThrow(TypeError::class)
+        ->and($set->toArray())->toBe(['a', 'b']);
+})->with(['01', '1', 1.0]);
+
+it('throws exception when the set would contain itself', function (callable $addSelf) {
+    $set = new Set(['a']);
+
+    expect(fn () => $addSelf($set))->toThrow(\Eldaqo\Collections\Exceptions\SelfReferenceException::class)
+        ->and($set->toArray())->toBe(['a']);
+})->with([
+    'offset set' => [fn (Set $set) => $set[0] = $set],
+    'append' => [fn (Set $set) => $set[] = $set],
+    'add' => [fn (Set $set) => $set->add($set)],
+    'push' => [fn (Set $set) => $set->push('b', $set)],
+    'apply' => [fn (Set $set) => $set->apply(fn () => $set)],
+]);

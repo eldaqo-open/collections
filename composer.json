@@ -1,9 +1,8 @@
 {
   "name": "eldaqo/collections",
   "description": "This library provides implementations for common data structures (Pair, List, Dictionary, Set) in PHP.",
-  "version": "2.0.0",
   "minimum-stability": "stable",
-  "license": "gpl-3.0",
+  "license": "gpl-3.0-only",
   "authors": [
     {
       "name": "Janos Namenyi",

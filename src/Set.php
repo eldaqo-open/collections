@@ -42,7 +42,7 @@ final class Set implements ISet, Hashable
     private array $values = [];
 
     /**
-     * @param list<T> $values
+     * @param T[] $values
      */
     public function __construct(array $values = [])
     {
@@ -58,9 +58,18 @@ final class Set implements ISet, Hashable
 
     public function apply(callable $selector): void
     {
-        foreach ($this as $key => $value) {
-            $this[$key] = $selector($value, $key);
+        $values = array_map($selector, $this->values, array_keys($this->values));
+        $this->assertIsNotSelf(...$values);
+
+        $result = new self($values);
+
+        // Checked before assigning, so a failing selector leaves the set unchanged.
+        if ($result->count() !== $this->count()) {
+            throw new InvalidArgumentException('The selector produced duplicate values.');
         }
+
+        $this->values = $result->values;
+        $this->keys = $result->keys;
     }
 
     public function offsetExists(mixed $offset): bool
@@ -79,27 +88,37 @@ final class Set implements ISet, Hashable
 
     /**
      * @inheritdoc
-     * @param int $offset
+     * @param int|null $offset
      * @param T $value
      */
     public function offsetSet(mixed $offset, mixed $value): void
     {
+        if ($offset === null) {
+            $this->add($value);
+            return;
+        }
+
+        // The offset is stored in $keys, which must hold real integers.
+        if (!is_int($offset)) {
+            throw new \TypeError('The offset must be an integer.');
+        }
+
         if ($offset < 0 || $offset >= $this->count()) {
             throw new OutOfRangeException("The offset ($offset) must be between 0 and the length ({$this->count()}) of the list");
         }
 
-        if ($this->contains($value)) {
-            if ($this->offsetGet($offset) === $value) {
-                return;
-            }
+        $this->assertIsNotSelf($value);
 
+        $internalKey = $this->toInternalKey($value);
+        $oldInternalKey = $this->toInternalKey($this->values[$offset]);
+
+        if ($internalKey !== $oldInternalKey && array_key_exists($internalKey, $this->keys)) {
             throw new InvalidArgumentException('The specified value is already present in the set.');
         }
 
-        $internalKey = $this->toInternalKey($this->values[$offset]);
+        unset($this->keys[$oldInternalKey]);
         $this->values[$offset] = $value;
-        unset($this->keys[$internalKey]);
-        $this->keys[$this->toInternalKey($value)] = $offset;
+        $this->keys[$internalKey] = $offset;
     }
 
     public function offsetUnset(mixed $offset): void
@@ -116,28 +135,43 @@ final class Set implements ISet, Hashable
         return array_key_exists($this->toInternalKey($value), $this->keys);
     }
 
+    public function search(mixed $value): int|null
+    {
+        return $this->keys[$this->toInternalKey($value)] ?? null;
+    }
+
     public function add(mixed $value): void
     {
-        if ($this->contains($value)) {
+        $this->assertIsNotSelf($value);
+
+        $internalKey = $this->toInternalKey($value);
+
+        if (array_key_exists($internalKey, $this->keys)) {
             return;
         }
 
-        $internalKey = $this->toInternalKey($value);
         $this->keys[$internalKey] = count($this->values);
         $this->values[$this->keys[$internalKey]] = $value;
     }
 
     public function remove(mixed $value): void
     {
-        if (!$this->contains($value)) {
+        $internalKey = $this->toInternalKey($value);
+
+        if (!array_key_exists($internalKey, $this->keys)) {
             throw new OutOfBoundsException('The specified value is not present in the set.');
         }
 
-        unset($this->values[$this->keys[$this->toInternalKey($value)]]);
-        $this->keys = [];
-        $this->values = array_values($this->values);
-        foreach ($this->values as $index => $item) {
-            $this->keys[$this->toInternalKey($item)] = $index;
+        $index = $this->keys[$internalKey];
+
+        unset($this->keys[$internalKey]);
+        array_splice($this->values, $index, 1);
+
+        // Shift the later positions down instead of hashing every value again.
+        foreach ($this->keys as $key => $offset) {
+            if ($offset > $index) { // @pest-mutate-ignore GreaterToGreaterOrEqual: only the removed key equals $index, and it is already unset
+                $this->keys[$key] = $offset - 1;
+            }
         }
     }
 
@@ -155,6 +189,9 @@ final class Set implements ISet, Hashable
 
     public function push(mixed ...$values): void
     {
+        // Checked up front, so a rejected push leaves the set unchanged.
+        $this->assertIsNotSelf(...$values);
+
         foreach ($values as $value) {
             $this->add($value);
         }
@@ -164,13 +201,8 @@ final class Set implements ISet, Hashable
     {
         $this->assertIsNotEmpty();
 
-        /** @var T $item */
-        $item = array_shift($this->values);
-
-        $this->keys = [];
-        foreach ($this->values as $offset => $value) {
-            $this->keys[$this->toInternalKey($value)] = $offset;
-        }
+        $item = $this->values[0];
+        $this->remove($item);
 
         return $item;
     }

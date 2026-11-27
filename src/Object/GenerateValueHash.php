@@ -17,7 +17,7 @@ trait GenerateValueHash
     use HashKeys;
 
     /**
-     * @param list<mixed> $elements
+     * @param array<mixed> $elements
      * @param bool $ordered Whether the order of the elements is part of the value.
      */
     private function hashOf(array $elements, bool $ordered): string
@@ -28,6 +28,6 @@ trait GenerateValueHash
             sort($parts, SORT_STRING);
         }
 
-        return hash('xxh3', static::class . implode('', $parts));
+        return hash('sha256', static::class . implode('', $parts));
     }
 }

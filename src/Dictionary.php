@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Eldaqo\Collections;
 
-use Eldaqo\Collections\Contracts\ICollection;
 use Eldaqo\Collections\Contracts\IDictionary;
 use Eldaqo\Collections\Contracts\IList;
 use Eldaqo\Collections\Contracts\IPair;
@@ -15,8 +14,6 @@ use Eldaqo\Collections\Traits\CollectionShared;
 use Eldaqo\Collections\Traits\CountsElements;
 use Eldaqo\Collections\Traits\HashKeys;
 use OutOfBoundsException;
-use OutOfRangeException;
-use Random\Engine\Secure;
 use Random\Randomizer;
 use ValueError;
 
@@ -36,12 +33,9 @@ final class Dictionary implements IDictionary, Hashable
     use CountsElements;
 
     /**
-     * @var array<string, int>
-     */
-    private array $keys = [];
-
-    /**
-     * @var list<IPair<TKey, TValue>>
+     * Keyed by internal key; PHP arrays keep insertion order, so no separate index is needed.
+     *
+     * @var array<string, IPair<TKey, TValue>>
      */
     private array $values = [];
 
@@ -99,16 +93,18 @@ final class Dictionary implements IDictionary, Hashable
 
     public function offsetExists(mixed $offset): bool
     {
-        return array_key_exists($this->toInternalKey($offset), $this->keys);
+        return array_key_exists($this->toInternalKey($offset), $this->values);
     }
 
     public function offsetGet(mixed $offset): mixed
     {
-        if (!$this->offsetExists($offset)) {
+        $internalKey = $this->toInternalKey($offset);
+
+        if (!array_key_exists($internalKey, $this->values)) {
             throw new OutOfBoundsException('The specified key does not exist.');
         }
 
-        return $this->values[$this->keys[$this->toInternalKey($offset)]]->value();
+        return $this->values[$internalKey]->value();
     }
 
     /**
@@ -117,49 +113,34 @@ final class Dictionary implements IDictionary, Hashable
      */
     public function offsetSet(mixed $offset, mixed $value): void
     {
+        $this->assertIsNotSelf($offset, $value);
+
         /** @var Pair<TKey, TValue> $pair */
         $pair = new Pair($offset, $value);
 
-        $internalKey = $this->toInternalKey($offset);
-
-        if ($this->offsetExists($offset)) {
-            $this->values[$this->keys[$internalKey]] = $pair;
-            return;
-        }
-
-        $this->keys[$internalKey] = count($this->values);
-        $this->values[] = $pair;
+        $this->values[$this->toInternalKey($offset)] = $pair;
     }
 
     public function offsetUnset(mixed $offset): void
     {
-        if (!$this->offsetExists($offset)) {
+        $internalKey = $this->toInternalKey($offset);
+
+        if (!array_key_exists($internalKey, $this->values)) {
             throw new OutOfBoundsException('The specified key does not exist.');
         }
 
-        $internalKey = $this->toInternalKey($offset);
-
-        $index = $this->keys[$internalKey];
-
-        if ($index === count($this->values) - 1) {
-            unset($this->keys[$internalKey], $this->values[$index]);
-            return;
-        }
-
-        unset($this->values[$this->keys[$internalKey]]);
-
-        $this->keys = [];
-        $this->values = array_values($this->values);
-        foreach ($this->values as $index => $pair) {
-            $this->keys[$this->toInternalKey($pair->key())] = $index;
-        }
+        unset($this->values[$internalKey]);
     }
 
     public function apply(callable $selector): void
     {
-        foreach ($this->values as $offset => $pair) {
-            $this->values[$offset] = $pair->withValue($selector($pair->value(), $pair->key()));
-        }
+        $values = array_map(
+            static fn (IPair $pair) => $pair->withValue($selector($pair->value(), $pair->key())),
+            $this->values
+        );
+        $this->assertIsNotSelf(...array_map(static fn (IPair $pair) => $pair->value(), $values));
+
+        $this->values = $values;
     }
 
     public function chunk(int $length): IList
@@ -174,26 +155,16 @@ final class Dictionary implements IDictionary, Hashable
 
     public function countValues(): IDictionary
     {
-        $result = new Dictionary();
+        $result = new self();
 
-        foreach ($this->values as $value) {
-            $result[$value->value()] = $result->offsetExists($value->value()) ? $result[$value->value()] + 1 : 1;
+        // Writes the internal storage directly, so each value is hashed once instead of three times.
+        foreach ($this->values as $pair) {
+            $internalKey = $this->toInternalKey($pair->value());
+            $count = isset($result->values[$internalKey]) ? $result->values[$internalKey]->value() + 1 : 1;
+            $result->values[$internalKey] = new Pair($pair->value(), $count);
         }
 
         return $result;
-    }
-
-    public function diff(ICollection ...$collections): IDictionary
-    {
-        return new Dictionary(
-            ...array_filter(
-                $this->values,
-                static fn (IPair $value) => !empty(array_diff(
-                    [$value->value()],
-                    ...array_map(static fn (ICollection $collection) => $collection->values()->toArray(), $collections)
-                )),
-            )
-        );
     }
 
     /**
@@ -202,10 +173,13 @@ final class Dictionary implements IDictionary, Hashable
      */
     public function filter(callable $selector): self
     {
-        return new self(...array_filter(
+        $result = new self();
+        $result->values = array_filter(
             $this->values,
             static fn (IPair $pair) => $selector($pair->value(), $pair->key())
-        ));
+        );
+
+        return $result;
     }
 
     public function flip(): IDictionary
@@ -214,19 +188,6 @@ final class Dictionary implements IDictionary, Hashable
             ...array_map(
                 static fn (IPair $pair) => new Pair($pair->value(), $pair->key()),
                 $this->values
-            )
-        );
-    }
-
-    public function intersect(ICollection ...$collections): IDictionary
-    {
-        return new Dictionary(
-            ...array_filter(
-                $this->values,
-                static fn (IPair $value) => !empty(array_intersect(
-                    [$value->value()],
-                    ...array_map(static fn (ICollection $collection) => $collection->values()->toArray(), $collections)
-                )),
             )
         );
     }
@@ -242,11 +203,14 @@ final class Dictionary implements IDictionary, Hashable
      */
     public function map(callable $selector): self
     {
-        return new self(...array_map(
-            static fn ($value, $key) => new Pair($key, $selector($value, $key)),
-            $this->values()->toArray(),
-            $this->keys()->toArray()
-        ));
+        // Keys are unchanged, so the internal keys are reused instead of hashing every key again.
+        $result = new self();
+        $result->values = array_map(
+            static fn (IPair $pair) => $pair->withValue($selector($pair->value(), $pair->key())),
+            $this->values
+        );
+
+        return $result;
     }
 
     public function pop(): mixed
@@ -256,40 +220,20 @@ final class Dictionary implements IDictionary, Hashable
         /** @var Pair<TKey, TValue> $item */
         $item = array_pop($this->values);
 
-        unset($this->keys[$this->toInternalKey($item->key())]);
-
         return $item->value();
     }
 
-    public function random(int $count = 1): IDictionary
+    /**
+     * @return IDictionary<TKey, TValue>
+     */
+    private function pick(int $count, Randomizer $randomizer): IDictionary
     {
-        $this->assertIsNotEmpty();
+        $this->assertCanPick($count);
 
-        if ($count > $this->count()) {
-            throw new OutOfRangeException('The count must be less than or equal to the number of elements in the dictionary.');
-        }
-
-        $keys = array_rand($this->values, $count);
-
-        return new Dictionary(...array_map(
-            fn (int $key) => $this->values[$key],
-            is_array($keys) ? $keys : [$keys]
+        return new self(...array_map(
+            fn (string $key) => $this->values[$key],
+            $randomizer->pickArrayKeys($this->values, $count)
         ));
-    }
-
-    public function secureRandom(int $count = 1): IDictionary
-    {
-        $this->assertIsNotEmpty();
-
-        if ($count > $this->count()) {
-            throw new OutOfRangeException('The count must be less than or equal to the number of elements in the dictionary.');
-        }
-
-        $randomizer = new Randomizer(new Secure());
-
-        $keys = $randomizer->pickArrayKeys($this->values, $count);
-
-        return new Dictionary(...array_map(fn (int $key) => $this->values[$key], $keys));
     }
 
     public function reduce(callable $selector, mixed $initial = null): mixed
@@ -299,13 +243,9 @@ final class Dictionary implements IDictionary, Hashable
 
     public function search(mixed $value): mixed
     {
-        foreach ($this->values as $pair) {
-            if ($pair->value() === $value) {
-                return $pair->key();
-            }
-        }
+        $offset = $this->values()->search($value);
 
-        return null;
+        return $offset === null ? null : array_values($this->values)[$offset]->key();
     }
 
     /**
@@ -332,11 +272,6 @@ final class Dictionary implements IDictionary, Hashable
         /** @var Pair<TKey, TValue> $item */
         $item = array_shift($this->values);
 
-        $this->keys = [];
-        foreach ($this->values as $index => $pair) {
-            $this->keys[$this->toInternalKey($pair->key())] = $index;
-        }
-
         return $item->value();
     }
 
@@ -349,12 +284,7 @@ final class Dictionary implements IDictionary, Hashable
 
     public function sortBy(callable $selector): Dictionary
     {
-        usort($this->values, $selector);
-
-        $this->keys = [];
-        foreach ($this->values as $index => $pair) {
-            $this->keys[$this->toInternalKey($pair->key())] = $index;
-        }
+        uasort($this->values, $selector);
 
         return $this;
     }

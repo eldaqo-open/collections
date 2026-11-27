@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Eldaqo\Collections\Traits;
 
 use Eldaqo\Collections\ArrayList;
-use Eldaqo\Collections\Contracts\ICollection;
 use Eldaqo\Collections\Contracts\IDictionary;
 use Eldaqo\Collections\Contracts\IList;
 use Eldaqo\Collections\Contracts\ISet;
@@ -13,8 +12,6 @@ use Eldaqo\Collections\Dictionary;
 use Eldaqo\Collections\Pair;
 use Eldaqo\Collections\Set;
 use Eldaqo\Collections\SortDirection;
-use OutOfRangeException;
-use Random\Engine\Secure;
 use Random\Randomizer;
 
 /**
@@ -58,20 +55,6 @@ trait ListShared
         return new ArrayList(array_map(fn (array $chunk) => new self($chunk), array_chunk($this->values, $length)));
     }
 
-    public function diff(ICollection ...$collections): IDictionary
-    {
-        $values = array_diff(
-            $this->values,
-            ...array_map(fn (ICollection $collection) => $collection->values()->toArray(), $collections)
-        );
-
-        return new Dictionary(...array_map(
-            static fn ($key, $value) => new Pair($key, $value),
-            array_keys($values),
-            $values
-        ));
-    }
-
     /**
      * @inheritdoc
      * @return self<T>
@@ -79,20 +62,6 @@ trait ListShared
     public function filter(callable $selector): self
     {
         return new self(array_filter($this->values, $selector, ARRAY_FILTER_USE_BOTH));
-    }
-
-    public function intersect(ICollection ...$collections): IDictionary
-    {
-        $values = array_intersect(
-            $this->values,
-            ...array_map(fn (ICollection $collection) => $collection->values()->toArray(), $collections)
-        );
-
-        return new Dictionary(...array_map(
-            static fn ($key, $value) => new Pair($key, $value),
-            array_keys($values),
-            $values
-        ));
     }
 
     /**
@@ -118,35 +87,17 @@ trait ListShared
         ));
     }
 
-    public function random(int $count = 1): IDictionary
+    /**
+     * @return IDictionary<int, T>
+     */
+    private function pick(int $count, Randomizer $randomizer): IDictionary
     {
-        $this->assertIsNotEmpty();
-
-        if ($count > $this->count()) {
-            throw new OutOfRangeException('The count must be less than or equal to the number of elements in the list.');
-        }
-
-        $keys = array_rand($this->values, $count);
+        $this->assertCanPick($count);
 
         return new Dictionary(...array_map(
             fn ($key) => new Pair($key, $this->values[$key]),
-            is_array($keys) ? $keys : [$keys]
+            $randomizer->pickArrayKeys($this->values, $count)
         ));
-    }
-
-    public function secureRandom(int $count = 1): IDictionary
-    {
-        $this->assertIsNotEmpty();
-
-        if ($count > $this->count()) {
-            throw new OutOfRangeException('The count must be less than or equal to the number of elements in the list.');
-        }
-
-        $randomizer = new Randomizer(new Secure());
-
-        $keys = $randomizer->pickArrayKeys($this->values, $count);
-
-        return new Dictionary(...array_map(fn ($key) => new Pair($key, $this->values[$key]), $keys));
     }
 
     public function reduce(callable $selector, mixed $initial = null): mixed
@@ -156,8 +107,24 @@ trait ListShared
 
     public function search(mixed $value): int|null
     {
-        $offset = array_search($value, $this->values, true);
-        return $offset !== false ? $offset : null;
+        // For these types hash equality is exactly ===, so the native search gives the same result.
+        // Speed only: skipping this branch gives the same result, so its mutants cannot be killed.
+        if ($value === null || is_int($value) || is_string($value) || is_bool($value)) { // @pest-mutate-ignore BooleanOrToBooleanAnd
+            $offset = array_search($value, $this->values, true);
+            return $offset === false ? null : $offset; // @pest-mutate-ignore RemoveEarlyReturn
+        }
+
+        $type = gettype($value);
+        $needle = $this->toInternalKey($value);
+
+        foreach ($this->values as $offset => $item) {
+            // The type is part of the hash, so items of another type are skipped without hashing them.
+            if ($item === $value || (gettype($item) === $type && $this->toInternalKey($item) === $needle)) {
+                return $offset;
+            }
+        }
+
+        return null;
     }
 
     public function sort(SortDirection $direction = SortDirection::ASCENDING): self
